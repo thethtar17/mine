@@ -5,6 +5,7 @@
       <button @click="goToProfile">Go to Profile</button>
       <button @click="goToSettings">Go to Settings</button>
       <button @click="goToOther">Go to Other</button>
+      <button @click="goToMoney">Go to Money</button>
     </div>
   </template>
   
@@ -26,12 +27,15 @@
       const  goToOther = () => {
         router.push('/other');
       };
-  
+      const  goToMoney = () => {
+        router.push('/money');
+      };
       return {
         goToToDoList,
         goToProfile,
         goToSettings,
         goToOther,
+        goToMoney,
       };
     },
   };
