@@ -54,7 +54,8 @@
   
           // Store the token in localStorage for future requests
           localStorage.setItem("token", response.data.token);
-  
+          localStorage.setItem("username", this.username); // Save the username
+
           // Optionally store it in Vuex or redirect user after login
           this.$router.push("/"); // Redirect to homepage or dashboard after login
         } catch (error) {

@@ -4,19 +4,21 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
-const authRoute = require("./routes/auth");
-
+const bodyParser = require('body-parser');
 dotenv.config(); // Load environment variables from .env file
 
 const app = express();
 const port = 3000;
 // Define a secret key for JWT
 const JWT_SECRET = 'your-secret-key'; //
-
+// const moneyRoutes = require('./routes/money');
+const { authenticateToken } = require('./routes/auth'); 
 // Set up CORS to allow communication between front-end and back-end
 app.use(cors());
 app.use(express.json()); // Middleware to handle JSON requests
-
+// app.use('/api/money', moneyRoutes);
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true })); 
 // Create a connection to the MySQL database
 const db = mysql.createConnection({
   host: 'localhost',
@@ -44,17 +46,7 @@ db.query(`
    role ENUM('user', 'admin') DEFAULT 'user'
   );
 `);
-db.query(
-  `CREATE TABLE  IF NOT EXISTS money (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
-  amount DECIMAL(10, 2) NOT NULL,
-  type ENUM('income', 'expense') NOT NULL,
-  description VARCHAR(255),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-`);
+
 
 app.post('/api/auth/login', async (req, res) => {
   const { username, password } = req.body;
@@ -90,12 +82,6 @@ app.post('/api/auth/login', async (req, res) => {
     res.status(200).json({ message: 'Login successful', token });
   });
 });
-
-
-
-
-
-
 
 // Endpoint to get all tasks
 app.get('/api/todos', (req, res) => {
@@ -199,34 +185,13 @@ app.post('/api/auth/register', async (req, res) => {
 });
 
 
-// Middleware to authenticate JWT token
-// function authenticateJWT(req, res, next) {
-//   const token = req.headers['authorization'];
+app.get('/api/user', authenticateToken, (req, res) => {
+  const userName = req.user.name; // Assuming the name is stored in the token payload
+  res.json({ name: userName });
+});
 
-//   if (!token) {
-//     return res.status(403).json({ error: 'Access denied' });
-//   }
 
-//   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-//     if (err) {
-//       return res.status(403).json({ error: 'Invalid token' });
-//     }
-//     req.user = user;
-//     next();
-//   });
-// }
 
-// // Example of a protected route
-// app.get('/api/protected', authenticateJWT, (req, res) => {
-//   res.json({ message: 'This is a protected route', user: req.user });
-// });
-// api.get('/some/protected/route')
-// .then(response => {
-//   console.log('Protected data:', response.data);
-// })
-// .catch(error => {
-//   console.error('Error fetching protected data:', error);
-// });
 // Start the server
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
