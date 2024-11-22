@@ -7,13 +7,16 @@
     <button @click="goToOther">Go to Other</button>
     <button @click="goToMoney">Go to Money</button>
   </div>
+  <div>
+    <button @click="handleLogout">Logout</button>
+  </div>
 </template>
 
 <script>
 import { ref, onMounted } from 'vue'; // Import ref and onMounted
 import { getUserName } from '../services/userService'; // Import the user service
 import { useRouter } from 'vue-router';
-
+import axios from 'axios';
 export default {
   setup() {
     const router = useRouter(); // Use the router
@@ -22,17 +25,21 @@ export default {
     // Fetch the logged-in user's name
     const fetchUserName = async () => {
       try {
-        // Check if username is already in localStorage
-        const storedUsername = localStorage.getItem('username');
-        if (storedUsername) {
-          userName.value = storedUsername;
-        } else {
-          // Fetch username from the API service if not found in localStorage
-          userName.value = await getUserName(); 
+        const token = localStorage.getItem('token'); // Get the token from localStorage
+        if (!token) {
+          throw new Error('No token found');
         }
+
+        const response = await axios.get("http://localhost:3000/api/auth/user", {
+          headers: {
+            Authorization: `Bearer ${token}`, // Send the token in the Authorization header
+          },
+        });
+
+        userName.value = response.data.username; // Update the username
       } catch (error) {
         console.error('Error fetching user name:', error);
-        userName.value = 'Guest'; // Set a fallback value if there's an error
+        userName.value = 'Guest'; // Fallback value
       }
     };
 
@@ -40,6 +47,15 @@ export default {
     onMounted(() => {
       fetchUserName();
     });
+    
+     // Handle Logout: clear localStorage and redirect to login page
+     const handleLogout = () => {
+      localStorage.removeItem('username');
+      localStorage.removeItem('role');
+      localStorage.removeItem('token'); // If token is stored
+
+      router.push('/login');
+    };
 
     // Routing methods
     const goToToDoList = () => {
@@ -60,6 +76,7 @@ export default {
 
     return {
       userName, // Return userName so it can be used in the template
+      handleLogout,
       goToToDoList,
       goToProfile,
       goToSettings,

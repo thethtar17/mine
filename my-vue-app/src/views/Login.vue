@@ -46,28 +46,34 @@
     },
     methods: {
       async handleLogin() {
-        try {
-          const response = await axios.post("http://localhost:3000/api/auth/login", {
-            username: this.username,
-            password: this.password,
-          });
-  
-          // Store the token in localStorage for future requests
-          localStorage.setItem("token", response.data.token);
-          localStorage.setItem("username", this.username); // Save the username
+  try {
+    const response = await axios.post('http://localhost:3000/api/auth/login', {
+      username: this.username,
+      password: this.password,
+    });
 
-          // Optionally store it in Vuex or redirect user after login
-          this.$router.push("/"); // Redirect to homepage or dashboard after login
-        } catch (error) {
-          if (error.response) {
-            alert("Error logging in: " + error.response.data.message);
-          } else {
-            alert("Error logging in: " + error.message);
-          }
-        }
-      },
+    const { token, username } = response.data;
+
+    // Save the token and username to localStorage
+    localStorage.setItem('token', token);
+    localStorage.setItem('username', username);
+
+    // Redirect to the dashboard or homepage
+    this.$router.push('/');
+  } catch (error) {
+    console.error('Error during login:', error.response?.data || error.message);
+    alert(error.response?.data?.message || 'An error occurred');
+  }
+}
+
+
+,
     },
   };
+
+
+ 
+
   </script>
 <style scoped>
 /* Overall container styling */

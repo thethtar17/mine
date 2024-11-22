@@ -10,7 +10,7 @@ dotenv.config(); // Load environment variables from .env file
 const app = express();
 const port = 3000;
 // Define a secret key for JWT
-const JWT_SECRET = 'your-secret-key'; //
+const JWT_SECRET = '123'; //
 // const moneyRoutes = require('./routes/money');
 const { authenticateToken } = require('./routes/auth'); 
 // Set up CORS to allow communication between front-end and back-end
@@ -48,11 +48,63 @@ db.query(`
 `);
 
 
-app.post('/api/auth/login', async (req, res) => {
+app.get("/api/auth/user", (req, res) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) {
+    return res.status(401).json({ message: "No token provided" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET); // Decode token
+    res.status(200).json({ userId: decoded.userId, username: decoded.username, role: decoded.role });
+  } catch (err) {
+    res.status(403).json({ message: "Invalid or expired token" });
+  }
+});
+
+
+app.get('/api/auth/profile', (req, res) => {
+  const token = req.headers.authorization?.split(" ")[1];
+
+  if (!token) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    
+    // Send the userId along with the username and role
+    res.json({
+      id: decoded.userId,  // Include userId from the token
+      username: decoded.username,
+      role: decoded.role
+    });
+  } catch (error) {
+    res.status(403).json({ message: "Invalid token" });
+  }
+});
+
+// app.get('/api/auth/profile', (req, res) => {
+//   const token = req.headers.authorization?.split(" ")[1];
+//   if (!token) {
+//     return res.status(401).json({ message: "Unauthorized" });
+//   }
+
+//   try {
+//     const decoded = jwt.verify(token, JWT_SECRET);
+//     res.json({ username: decoded.username, role: decoded.role });
+//   } catch (error) {
+//     res.status(403).json({ message: "Invalid token" });
+//   }
+// });
+
+
+app.post('/api/auth/login', (req, res) => {
   const { username, password } = req.body;
 
+  // Validate the input
   if (!username || !password) {
-    return res.status(400).json({ message: 'Username are required.' });
+    return res.status(400).json({ message: 'Username and password are required.' });
   }
 
   // Check if the username exists in the database
@@ -61,25 +113,32 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(500).json({ message: 'Database error.' });
     }
 
+    // If no user is found
     if (results.length === 0) {
-      return res.status(400).json({ message: 'Invalid  password.' });
+      return res.status(400).json({ message: 'Invalid username or password.' });
     }
 
     const user = results[0];
 
-    // Check if the provided password matches the stored hashed password
+    // Compare the hashed password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return res.status(400).json({ message: 'Invalid username or password.' });
     }
 
-    // Create a JWT token
-    const token = jwt.sign({ userId: user.id, username: user.username, role: user.role }, JWT_SECRET, {
-      expiresIn: '1h', // Set an expiration time for the token
-    });
+    // Generate a JWT token
+    const token = jwt.sign(
+      { userId: user.id, username: user.username, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '1h' } // Set expiration time
+    );
 
-    // Return the token in the response
-    res.status(200).json({ message: 'Login successful', token });
+    // Send response with token
+    return res.status(200).json({
+      message: 'Login successful',
+      token, // The token is sent in the response
+      username: user.username, // Include username for convenience
+    });
   });
 });
 
@@ -185,7 +244,7 @@ app.post('/api/auth/register', async (req, res) => {
 });
 
 
-app.get('/api/user', authenticateToken, (req, res) => {
+app.get('/api/auth/user', authenticateToken, (req, res) => {
   const userName = req.user.name; // Assuming the name is stored in the token payload
   res.json({ name: userName });
 });

@@ -15,7 +15,7 @@ const routes = [
   { path: '/login', component: Login, meta: { title: 'Login' } },
   { path: '/register', component: Register, meta: { title: 'Register' } },
   { path: '/todo', name: 'ToDoList', component: ToDoList, meta: { title: 'To-Do List' } },
-  { path: '/profile', name: 'Profile', component: Profile, meta: { requiresAuth: true, title: 'Profile' } },
+  { path: '/profile', name: 'Profile', component: Profile, meta: { requiresAuth: false, title: 'Profile' } },
   { path: '/settings', name: 'Settings', component: Settings, meta: { requiresAuth: true, title: 'Settings' } },
   { path: '/other', name: 'OtherPage', component: OtherPage, meta: { title: 'Other Page' } },
   { path: '/money', name: 'MoneyManger', component: MoneyManger, meta: { requiresAuth: false, title: 'Money Manager' } },
